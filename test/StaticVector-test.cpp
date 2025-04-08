@@ -519,3 +519,206 @@ TEST_F(StaticVectorTest, ResizeCountValue) {
 
   vec.resize(5, 55);
 }
+
+using TestVector = StaticVector<int, 10, uint8_t>;
+using ConstTestVector = const StaticVector<int, 10, uint8_t>;
+
+class StaticVectorReverseIteratorTest : public ::testing::Test {
+ protected:
+  static void SetUpTestSuite() {}
+
+  static void TearDownTestSuite() {}
+
+  void SetUp() override {
+    sv_multi_ = {10, 20, 30, 40, 50};
+    expected_multi_reverse_ = {50, 40, 30, 20, 10};
+  }
+
+  void TearDown() override {}
+
+  TestVector sv_multi_;
+  std::vector<int> expected_multi_reverse_;
+};
+
+TEST_F(StaticVectorReverseIteratorTest, EmptyVector) {
+  TestVector sv_empty;
+  ConstTestVector& csv_empty = sv_empty;
+
+  EXPECT_EQ(sv_empty.rbegin(), sv_empty.rend());
+  EXPECT_EQ(sv_empty.crbegin(), sv_empty.crend());
+  EXPECT_EQ(csv_empty.rbegin(), csv_empty.rend());
+  EXPECT_EQ(csv_empty.crbegin(), csv_empty.crend());
+
+  EXPECT_EQ(sv_empty.rbegin().base(), sv_empty.end());
+  EXPECT_EQ(sv_empty.rend().base(), sv_empty.begin());
+  EXPECT_EQ(csv_empty.rbegin().base(), csv_empty.end());
+  EXPECT_EQ(csv_empty.rend().base(), csv_empty.begin());
+  EXPECT_EQ(sv_empty.crbegin().base(), sv_empty.cend());
+  EXPECT_EQ(sv_empty.crend().base(), sv_empty.cbegin());
+}
+
+TEST_F(StaticVectorReverseIteratorTest, SingleElementVector) {
+  TestVector sv_one = {42};
+  ConstTestVector& csv_one = sv_one;
+
+  EXPECT_NE(sv_one.rbegin(), sv_one.rend());
+  EXPECT_NE(sv_one.crbegin(), sv_one.crend());
+  EXPECT_NE(csv_one.rbegin(), csv_one.rend());
+  EXPECT_NE(csv_one.crbegin(), csv_one.crend());
+
+  EXPECT_EQ(*sv_one.rbegin(), 42);
+  EXPECT_EQ(*csv_one.rbegin(), 42);
+  EXPECT_EQ(*sv_one.crbegin(), 42);
+  EXPECT_EQ(*csv_one.crbegin(), 42);
+
+  auto rit = sv_one.rbegin();
+  ASSERT_NE(rit, sv_one.rend());
+  EXPECT_EQ(*rit, 42);
+  ++rit;
+  EXPECT_EQ(rit, sv_one.rend());
+
+  auto crit = csv_one.crbegin();
+  ASSERT_NE(crit, csv_one.crend());
+  EXPECT_EQ(*crit, 42);
+  ++crit;
+  EXPECT_EQ(crit, csv_one.crend());
+}
+
+TEST_F(StaticVectorReverseIteratorTest, MultiElementIteration) {
+  ConstTestVector& csv_multi = sv_multi_;
+
+  std::vector<int> actual_reverse;
+
+  actual_reverse.clear();
+  std::copy(sv_multi_.rbegin(), sv_multi_.rend(), std::back_inserter(actual_reverse));
+  EXPECT_EQ(actual_reverse, expected_multi_reverse_);
+  EXPECT_THAT(actual_reverse, ::testing::ElementsAre(50, 40, 30, 20, 10));
+
+  actual_reverse.clear();
+  std::copy(csv_multi.rbegin(), csv_multi.rend(), std::back_inserter(actual_reverse));
+  EXPECT_EQ(actual_reverse, expected_multi_reverse_);
+  actual_reverse.clear();
+  std::copy(csv_multi.rbegin(), csv_multi.rend(), std::back_inserter(actual_reverse));
+  EXPECT_EQ(actual_reverse, expected_multi_reverse_);
+  EXPECT_THAT(actual_reverse, ::testing::ElementsAre(50, 40, 30, 20, 10));
+
+  actual_reverse.clear();
+  std::copy(sv_multi_.crbegin(), sv_multi_.crend(), std::back_inserter(actual_reverse));
+  EXPECT_EQ(actual_reverse, expected_multi_reverse_);
+  EXPECT_THAT(actual_reverse, ::testing::ElementsAre(50, 40, 30, 20, 10));
+
+  actual_reverse.clear();
+  std::copy(csv_multi.crbegin(), csv_multi.crend(), std::back_inserter(actual_reverse));
+  EXPECT_EQ(actual_reverse, expected_multi_reverse_);
+  EXPECT_THAT(actual_reverse, ::testing::ElementsAre(50, 40, 30, 20, 10));
+}
+
+TEST_F(StaticVectorReverseIteratorTest, MultiElementModification) {
+  ASSERT_FALSE(sv_multi_.empty());
+
+  *sv_multi_.rbegin() = 55;
+  EXPECT_EQ(sv_multi_.back(), 55);
+  EXPECT_EQ(sv_multi_[4], 55);
+
+  ASSERT_NE(sv_multi_.rbegin(), sv_multi_.rend());
+  auto it = sv_multi_.rbegin();
+  ++it;
+  ASSERT_NE(it, sv_multi_.rend());
+  *it = 44;
+  EXPECT_EQ(sv_multi_[3], 44);
+
+  EXPECT_THAT(sv_multi_, ::testing::ElementsAre(10, 20, 30, 44, 55));
+}
+
+TEST_F(StaticVectorReverseIteratorTest, MultiElementAlgorithms) {
+  std::vector<int> result;
+  result.resize(sv_multi_.size());
+
+  std::reverse_copy(sv_multi_.begin(), sv_multi_.end(), result.begin());
+  EXPECT_EQ(result, expected_multi_reverse_);
+  EXPECT_THAT(result, ::testing::ElementsAre(50, 40, 30, 20, 10));
+
+  std::fill(result.begin(), result.end(), 0);
+  std::copy(sv_multi_.rbegin(), sv_multi_.rend(), result.begin());
+  EXPECT_EQ(result, expected_multi_reverse_);
+  EXPECT_THAT(result, ::testing::ElementsAre(50, 40, 30, 20, 10));
+}
+
+TEST_F(StaticVectorReverseIteratorTest, MultiElementBaseAndArithmetic) {
+  ConstTestVector& csv_multi = sv_multi_;
+
+  ASSERT_FALSE(sv_multi_.empty());
+  EXPECT_EQ(*(sv_multi_.rbegin()), sv_multi_.back());
+  EXPECT_EQ(*(csv_multi.rbegin()), csv_multi.back());
+  EXPECT_EQ(*(sv_multi_.crbegin()), sv_multi_.back());
+
+  EXPECT_EQ(sv_multi_.rbegin().base(), sv_multi_.end());
+  EXPECT_EQ(csv_multi.rbegin().base(), csv_multi.end());
+  EXPECT_EQ(sv_multi_.crbegin().base(), sv_multi_.cend());
+
+  EXPECT_EQ(sv_multi_.rend().base(), sv_multi_.begin());
+  EXPECT_EQ(csv_multi.rend().base(), csv_multi.begin());
+  EXPECT_EQ(sv_multi_.crend().base(), sv_multi_.cbegin());
+
+  EXPECT_EQ(*(sv_multi_.rbegin().base() - 1), *sv_multi_.rbegin());
+  EXPECT_EQ(*(csv_multi.rbegin().base() - 1), *csv_multi.rbegin());
+  EXPECT_EQ(*(sv_multi_.crbegin().base() - 1), *sv_multi_.crbegin());
+  auto rit1 = sv_multi_.rbegin();
+  auto crit1 = csv_multi.crbegin();
+
+  auto rit2 = rit1 + 2;
+  auto crit2 = crit1 + 2;
+  EXPECT_EQ(*rit2, 30);
+  EXPECT_EQ(*crit2, 30);
+
+  EXPECT_EQ(rit2 - rit1, 2);
+  EXPECT_EQ(crit2 - crit1, 2);
+  EXPECT_EQ(rit1 - rit2, -2);
+  EXPECT_EQ(crit1 - crit2, -2);
+
+  auto rit3 = rit2 - 1;
+  auto crit3 = crit2 - 1;
+  EXPECT_EQ(*rit3, 40);
+  EXPECT_EQ(*crit3, 40);
+
+  rit1 += 3;
+  EXPECT_EQ(*rit1, 20);
+
+  rit1 -= 2;
+  EXPECT_EQ(*rit1, 40);
+
+  EXPECT_LT(sv_multi_.rbegin(), sv_multi_.rend());
+  EXPECT_LE(sv_multi_.rbegin(), sv_multi_.rend());
+  EXPECT_LE(sv_multi_.rbegin(), sv_multi_.rbegin());
+  EXPECT_GT(sv_multi_.rend(), sv_multi_.rbegin());
+  EXPECT_GE(sv_multi_.rend(), sv_multi_.rbegin());
+  EXPECT_GE(sv_multi_.rbegin(), sv_multi_.rbegin());
+
+  EXPECT_EQ(sv_multi_.rbegin() + sv_multi_.size(), sv_multi_.rend());
+  EXPECT_EQ(csv_multi.crbegin() + csv_multi.size(), csv_multi.crend());
+}
+
+TEST_F(StaticVectorReverseIteratorTest, FullVector) {
+  StaticVector<int, 5, uint8_t> sv_full;
+  sv_full.push_back(1);
+  sv_full.push_back(2);
+  sv_full.push_back(3);
+  sv_full.push_back(4);
+  sv_full.push_back(5);
+
+  ASSERT_TRUE(sv_full.full());
+  ASSERT_EQ(sv_full.size(), 5);
+
+  std::vector<int> expected_reverse = {5, 4, 3, 2, 1};
+  std::vector<int> actual_reverse;
+
+  std::copy(sv_full.rbegin(), sv_full.rend(), std::back_inserter(actual_reverse));
+  EXPECT_EQ(actual_reverse, expected_reverse);
+  EXPECT_THAT(actual_reverse, ::testing::ElementsAre(5, 4, 3, 2, 1));
+
+  const auto& csv_full = sv_full;
+  actual_reverse.clear();
+  std::copy(csv_full.crbegin(), csv_full.crend(), std::back_inserter(actual_reverse));
+  EXPECT_EQ(actual_reverse, expected_reverse);
+  EXPECT_THAT(actual_reverse, ::testing::ElementsAre(5, 4, 3, 2, 1));
+}

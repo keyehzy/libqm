@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <span>
 #include <type_traits>
@@ -47,6 +48,8 @@ struct StaticVector {
   using const_pointer = const value_type*;
   using iterator = pointer;
   using const_iterator = const_pointer;
+  using reverse_iterator = std::reverse_iterator<iterator>;
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
   static constexpr size_t static_capacity = MaxCount;
 
@@ -134,6 +137,18 @@ struct StaticVector {
   constexpr iterator end() noexcept { return data_ + size_; }
   constexpr const_iterator end() const noexcept { return data_ + size_; }
   constexpr const_iterator cend() const noexcept { return end(); }
+
+  constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+  constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+  constexpr const_reverse_iterator crbegin() const noexcept {
+    return const_reverse_iterator(cend());
+  }
+
+  constexpr reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+  constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+  constexpr const_reverse_iterator crend() const noexcept {
+    return const_reverse_iterator(cbegin());
+  }
 
   [[nodiscard]] constexpr bool empty() const noexcept { return size_ == 0; }
   [[nodiscard]] constexpr size_type size() const noexcept { return size_; }
@@ -235,7 +250,7 @@ struct StaticVector {
   }
 
  private:
-  alignas(T) T data_[static_capacity] {};
+  alignas(T) T data_[static_capacity]{};
   size_type size_;
 };
 
@@ -258,3 +273,20 @@ struct std::hash<StaticVector<T, MaxCount, SizeType>> {
     return seed;
   }
 };
+
+template <Trivial T, size_t MaxCount, UnsignedIntegralSizeType SizeType>
+  requires ValidStaticVectorCapacity<MaxCount, SizeType>
+constexpr bool has_consecutive_elements(const StaticVector<T, MaxCount, SizeType>& container) {
+  return std::adjacent_find(container.begin(), container.end()) != container.end();
+}
+
+template <Trivial T, size_t MaxCount, UnsignedIntegralSizeType SizeType>
+  requires ValidStaticVectorCapacity<MaxCount, SizeType>
+constexpr StaticVector<T, MaxCount, SizeType> merge(
+    const StaticVector<T, MaxCount, SizeType>& container1,
+    const StaticVector<T, MaxCount, SizeType>& container2) {
+  LIBQM_ASSERT(container1.remaining_capacity() >= container2.size());
+  StaticVector<T, MaxCount, SizeType> result(container1);
+  result.append_range(container2.begin(), container2.end());
+  return result;
+}
