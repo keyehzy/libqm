@@ -12,9 +12,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+using ::testing::ContainerEq;
 using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
-using ::testing::ContainerEq;
 
 class StaticVectorTest : public ::testing::Test {
  protected:
@@ -32,8 +32,8 @@ class StaticVectorTest : public ::testing::Test {
     constexpr Pair(T first, U second) : first(first), second(second) {}
 
     constexpr bool operator==(const Pair& other) const = default;
-};
-  
+  };
+
   using VecPoint4 = StaticVector<Pair<int, int>, 4>;
 };
 
