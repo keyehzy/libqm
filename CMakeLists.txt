@@ -15,6 +15,9 @@ add_executable(
 
   src/Term.cpp
   test/Term-test.cpp
+
+  src/Expression.cpp
+  test/Expression-test.cpp
 )
 
 target_link_libraries(
