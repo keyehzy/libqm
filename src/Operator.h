@@ -81,3 +81,10 @@ struct Operator {
 static_assert(sizeof(Operator) == 1);
 
 }  // namespace libqm
+
+template<>
+struct std::hash<libqm::Operator> {
+  [[nodiscard]] constexpr std::size_t operator()(libqm::Operator op) const noexcept {
+    return op.data;
+  }
+};
