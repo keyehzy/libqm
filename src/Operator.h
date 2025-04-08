@@ -76,7 +76,7 @@ struct Operator {
     return Operator(Type::Annihilation, spin, value);
   }
 
-  ubyte data;
+  ubyte data{};
 };
 static_assert(sizeof(Operator) == 1);
 
