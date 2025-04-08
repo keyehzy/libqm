@@ -27,7 +27,7 @@ struct __attribute__((aligned(cache_line_size))) Term {
   constexpr Term(Term&& other) noexcept = default;
   constexpr Term& operator=(Term&& other) noexcept = default;
 
-  explicit constexpr Term(const Operator& x) noexcept : operators({x}) {}
+  explicit constexpr Term(Operator x) noexcept : operators({x}) {}
   explicit constexpr Term(const complex_type& x) noexcept : c(x) {}
   explicit constexpr Term(const container_type& ops) noexcept : operators(ops) {}
   explicit constexpr Term(container_type&& ops) noexcept : operators(std::move(ops)) {}
@@ -49,8 +49,8 @@ struct __attribute__((aligned(cache_line_size))) Term {
 
   constexpr Term adjoint() const noexcept {
     Term result(std::conj(c));
-    for (size_t i = 0; i < size(); i++) {
-      result.operators.push_back(operators[size() - i - 1].adjoint());
+    for (auto it = operators.rbegin(); it != operators.rend(); ++it) {
+      result.operators.push_back(it->adjoint());
     }
     return result;
   }
@@ -61,7 +61,7 @@ struct __attribute__((aligned(cache_line_size))) Term {
     return *this;
   }
 
-  constexpr Term& operator*=(const Operator& value) noexcept {
+  constexpr Term& operator*=(Operator value) noexcept {
     operators.push_back(value);
     return *this;
   }
@@ -84,7 +84,7 @@ constexpr Term operator*(const Term& a, const Term& b) noexcept {
   return result;
 }
 
-constexpr Term operator*(const Term& a, const Operator& b) noexcept {
+constexpr Term operator*(const Term& a, Operator b) noexcept {
   Term result(a);
   result *= b;
   return result;
@@ -108,7 +108,7 @@ constexpr Term operator*(const Term::complex_type& a, const Term& b) noexcept {
   return result;
 }
 
-constexpr Term operator*(const Operator& a, const Term& b) noexcept {
+constexpr Term operator*(Operator a, const Term& b) noexcept {
   Term result(a);
   result *= b;
   return result;
