@@ -12,6 +12,9 @@ add_executable(
   test/Operator-test.cpp
   src/Operator.cpp
   test/StaticVector-test.cpp
+
+  src/Term.cpp
+  test/Term-test.cpp
 )
 
 target_link_libraries(
