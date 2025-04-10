@@ -34,7 +34,7 @@ Basis::Basis(size_t orbitals, size_t particles) : orbitals(orbitals), particles(
   acc.reserve(basis_size);
   generate_basis(acc);
   LIBQM_ASSERT(acc.size() == basis_size);
-  basis_set = IndexedHashSet(std::move(acc));
+  set = IndexedHashSet(std::move(acc));
 }
 
 void Basis::generate_basis(std::vector<key_type>& acc) const {

@@ -1,7 +1,8 @@
 #pragma once
 
+#include "Assert.h"
+
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -150,7 +151,7 @@ class IndexedHashSet {
   }
 
   const_reference operator[](size_type index) const {
-    assert(index < elements_.size());
+    LIBQM_ASSERT(index < elements_.size());
     return elements_[index];
   }
 

@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_package(OpenMP REQUIRED)
 find_package(GTest REQUIRED)
 
 add_executable(
@@ -39,6 +40,15 @@ add_library(
 
   src/NormalOrderer.h
   src/NormalOrderer.cpp
+
+  src/MatrixElements.h
+  src/MatrixElements.cpp
+)
+
+target_link_libraries(
+  qm
+  PRIVATE
+  OpenMP::OpenMP_CXX
 )
 
 add_executable(
@@ -52,7 +62,9 @@ add_executable(
 
 target_link_libraries(
   test_runner
+  PRIVATE
   qm
+  OpenMP::OpenMP_CXX
   GTest::GTest
   GTest::Main gmock
 )
