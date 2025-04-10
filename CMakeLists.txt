@@ -18,6 +18,9 @@ add_executable(
 
   src/Expression.cpp
   test/Expression-test.cpp
+
+  src/IndexedHashSet.h
+  test/IndexedHashSet-test.cpp
 )
 
 target_link_libraries(
