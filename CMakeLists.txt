@@ -21,6 +21,8 @@ add_executable(
 
   src/IndexedHashSet.h
   test/IndexedHashSet-test.cpp
+
+  src/Basis.cpp
 )
 
 target_link_libraries(
