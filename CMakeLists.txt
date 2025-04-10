@@ -8,25 +8,48 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(GTest REQUIRED)
 
 add_executable(
-  test_runner
-  test/Operator-test.cpp
+  main
+  src/main.cpp
+)
+
+target_link_libraries(
+  main
+  qm
+)
+
+add_library(
+  qm
+  src/Operator.h
   src/Operator.cpp
-  test/StaticVector-test.cpp
 
+  src/StaticVector.h
+  src/StaticVector.cpp
+
+  src/Term.h
   src/Term.cpp
-  test/Term-test.cpp
 
+  src/Expression.h
   src/Expression.cpp
-  test/Expression-test.cpp
 
   src/IndexedHashSet.h
-  test/IndexedHashSet-test.cpp
+  src/IndexedHashSet.cpp
 
+  src/Basis.h
   src/Basis.cpp
+)
+
+add_executable(
+  test_runner
+  test/Operator-test.cpp
+  test/StaticVector-test.cpp
+  test/Term-test.cpp
+  test/Expression-test.cpp
+  test/IndexedHashSet-test.cpp
 )
 
 target_link_libraries(
   test_runner
+  qm
   GTest::GTest
   GTest::Main gmock
 )
