@@ -16,16 +16,4 @@ std::string Term::to_string() const {
 
   return result;
 }
-
-bool is_diagonal(const Term::container_type& operators) {
-  std::unordered_map<size_t, int> counts;
-
-  for (const auto& op : operators) {
-    auto key = op.data & ~Operator::kFermionTypeTagMask;
-    counts[key] += (op.type() == Operator::Type::Creation) ? 1 : -1;
-  }
-
-  return std::all_of(counts.begin(), counts.end(),
-                     [](const auto& element) { return element.second == 0; });
-}
 }  // namespace libqm

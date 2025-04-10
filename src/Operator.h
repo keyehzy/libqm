@@ -19,6 +19,7 @@ struct Operator {
   using ubyte = uint8_t;
 
   static constexpr size_t max_index() { return 1 << (8 * sizeof(ubyte) - 2); }
+  static constexpr size_t max_unique_keys() { return 1 << (8 * sizeof(ubyte) - 1); }
 
   static constexpr ubyte kFermionTypeTagMask = 0x1;
   static constexpr ubyte kFermionSpinTagMask = 0x2;
@@ -47,6 +48,8 @@ struct Operator {
   }
 
   constexpr size_t value() const noexcept { return static_cast<size_t>(data >> kFermionBitsShift); }
+
+  constexpr size_t key() const noexcept { return data & ~kFermionTypeTagMask; }
 
   constexpr Operator adjoint() const noexcept { return Operator(data ^ kFermionTypeTagMask); }
 
@@ -82,7 +85,7 @@ static_assert(sizeof(Operator) == 1);
 
 }  // namespace libqm
 
-template<>
+template <>
 struct std::hash<libqm::Operator> {
   [[nodiscard]] constexpr std::size_t operator()(libqm::Operator op) const noexcept {
     return op.data;

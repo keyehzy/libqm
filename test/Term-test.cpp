@@ -396,13 +396,13 @@ TEST_F(TermTest, MultiplyOperatorTerm) {
 }
 
 TEST(TermHelperTest, IsDiagonal) {
-  Term::container_type ops_empty = {};
-  Term::container_type ops_diag1 = {cU0, aU0};
-  Term::container_type ops_diag2 = {cU0, cD1, aU0, aD1};
-  Term::container_type ops_diag3 = {cD1, aD1};
-  Term::container_type ops_non_diag1 = {cU0};
-  Term::container_type ops_non_diag2 = {cU0, aD1};
-  Term::container_type ops_non_diag3 = {cU0, cU0, aU0};
+  Term ops_empty({});
+  Term ops_diag1({cU0, aU0});
+  Term ops_diag2({cU0, cD1, aU0, aD1});
+  Term ops_diag3({cD1, aD1});
+  Term ops_non_diag1({cU0});
+  Term ops_non_diag2({cU0, aD1});
+  Term ops_non_diag3({cU0, cU0, aU0});
 
   EXPECT_TRUE(is_diagonal(ops_empty));
   EXPECT_TRUE(is_diagonal(ops_diag1));

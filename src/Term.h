@@ -28,22 +28,22 @@ struct __attribute__((aligned(cache_line_size))) Term {
   constexpr Term& operator=(Term&& other) noexcept = default;
 
   explicit constexpr Term(Operator x) noexcept : operators({x}) {}
-  explicit constexpr Term(const complex_type& x) noexcept : c(x) {}
+  explicit constexpr Term(complex_type x) noexcept : c(x) {}
   explicit constexpr Term(const container_type& ops) noexcept : operators(ops) {}
   explicit constexpr Term(container_type&& ops) noexcept : operators(std::move(ops)) {}
-  explicit constexpr Term(const complex_type& x, const container_type& ops) noexcept
+  explicit constexpr Term(complex_type x, const container_type& ops) noexcept
       : c(x), operators(ops) {}
-  explicit constexpr Term(const complex_type& x, container_type&& ops) noexcept
+  explicit constexpr Term(complex_type x, container_type&& ops) noexcept
       : c(x), operators(std::move(ops)) {}
   explicit constexpr Term(std::initializer_list<Operator> init) noexcept : operators(init) {}
-  explicit constexpr Term(const complex_type& x, std::initializer_list<Operator> init) noexcept
+  explicit constexpr Term(complex_type x, std::initializer_list<Operator> init) noexcept
       : c(x), operators(init) {}
 
   constexpr size_t size() const noexcept { return operators.size(); }
 
   std::string to_string() const;
 
-  constexpr bool operator==(const Term& other) const {
+  constexpr bool operator==(const Term& other) const noexcept {
     return c == other.c && operators == other.operators;
   }
 
@@ -66,12 +66,12 @@ struct __attribute__((aligned(cache_line_size))) Term {
     return *this;
   }
 
-  constexpr Term& operator*=(const complex_type& value) noexcept {
+  constexpr Term& operator*=(complex_type value) noexcept {
     c *= value;
     return *this;
   }
 
-  constexpr Term& operator/=(const complex_type& value) noexcept {
+  constexpr Term& operator/=(complex_type value) noexcept {
     c /= value;
     return *this;
   }
@@ -90,19 +90,19 @@ constexpr Term operator*(const Term& a, Operator b) noexcept {
   return result;
 }
 
-constexpr Term operator*(const Term& a, const Term::complex_type& b) noexcept {
+constexpr Term operator*(const Term& a, Term::complex_type b) noexcept {
   Term result(a);
   result *= b;
   return result;
 }
 
-constexpr Term operator/(const Term& a, const Term::complex_type& b) noexcept {
+constexpr Term operator/(const Term& a, Term::complex_type b) noexcept {
   Term result(a);
   result /= b;
   return result;
 }
 
-constexpr Term operator*(const Term::complex_type& a, const Term& b) noexcept {
+constexpr Term operator*(Term::complex_type a, const Term& b) noexcept {
   Term result(a);
   result *= b;
   return result;
@@ -114,7 +114,40 @@ constexpr Term operator*(Operator a, const Term& b) noexcept {
   return result;
 }
 
-bool is_diagonal(const Term::container_type& operators);
+constexpr bool is_diagonal(const Term& term) noexcept {
+  if (term.operators.empty()) {
+    return true;
+  }
+
+  std::array<std::pair<uint64_t, int>, Operator::max_unique_keys()> counts;
+  size_t counts_size = 0;
+
+  for (const auto& op : term.operators) {
+    int increment = (op.type() == Operator::Type::Creation) ? 1 : -1;
+
+    bool found = false;
+    for (size_t i = 0; i < counts_size; ++i) {
+      if (counts[i].first == op.key()) {
+        counts[i].second += increment;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      counts[counts_size] = {op.key(), increment};
+      counts_size++;
+    }
+  }
+
+  for (size_t i = 0; i < counts_size; ++i) {
+    if (counts[i].second != 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 constexpr Term creation(Operator::Spin spin, size_t orbital) noexcept {
   return Term({Operator::creation(spin, orbital)});
