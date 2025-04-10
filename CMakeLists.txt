@@ -36,6 +36,9 @@ add_library(
 
   src/Basis.h
   src/Basis.cpp
+
+  src/NormalOrderer.h
+  src/NormalOrderer.cpp
 )
 
 add_executable(

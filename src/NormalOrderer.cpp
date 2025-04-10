@@ -70,13 +70,13 @@ Expression NormalOrderer::normal_order_recursive(container_type ops, size_t hash
   } else {
     result = Expression(phase, std::move(ops));
   }
-  
+
   cache.emplace(hash, result);
   return result;
 }
 
 Expression NormalOrderer::handle_non_commuting(container_type ops, size_t index) {
-  container_type contracted = ops;
+  container_type contracted;
   contracted.append_range(ops.begin(), ops.begin() + index);
   contracted.append_range(ops.begin() + index + 2, ops.end());
   std::swap(ops[index], ops[index + 1]);
