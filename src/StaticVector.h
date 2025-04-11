@@ -219,7 +219,7 @@ struct StaticVector {
   template <size_t OtherMaxCount, typename OtherSizeType>
   constexpr void append_range(const StaticVector<T, OtherMaxCount, OtherSizeType>& other) noexcept {
     LIBQM_ASSERT(remaining_capacity() >= other.size());
-    std::copy_n(other.data(), other.size(), data_ + size_);
+    std::copy_n(other.begin(), other.size(), data_ + size_);
     size_ += other.size();
   }
 
