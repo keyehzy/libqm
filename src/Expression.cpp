@@ -44,10 +44,17 @@ Expression Expression::adjoint() const {
 }
 
 std::string Expression::to_string() const {
+  if (hashmap.empty()) {
+    return std::string();
+  }
+  
   std::string result;
 
   for (const auto& [ops, c] : hashmap) {
-    result += Term(c, ops).to_string() + "\n";
+    std::string term_string = Term(c, ops).to_string();
+    if (!term_string.empty()) {
+      result += term_string + "\n";
+    }
   }
 
   return result;
