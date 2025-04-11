@@ -43,6 +43,9 @@ add_library(
 
   src/MatrixElements.h
   src/MatrixElements.cpp
+
+  src/Commutator.h
+  src/Commutator.cpp
 )
 
 target_link_libraries(
