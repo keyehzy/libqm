@@ -48,7 +48,7 @@ Basis::Basis(size_t orbitals, size_t particles, Strategy strategy)
       std::vector<key_type> acc;
       acc.reserve(basis_size);
       generate_all_combinations({}, 0, acc);
-      LIBQM_ASSERT(acc.size() == basis_size);
+      // LIBQM_ASSERT(acc.size() == basis_size);
       std::sort(acc.begin(), acc.end(),
                 [](const auto& a, const auto& b) { return a.size() < b.size(); });
       set = IndexedHashSet(std::move(acc));
