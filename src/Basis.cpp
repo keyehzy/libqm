@@ -103,4 +103,22 @@ void Basis::generate_restrict_combinations(key_type current, size_t first_orbita
     }
   }
 }
+
+Basis generate_product_basis(const Basis& basis1, const Basis& basis2) {
+  Basis basis;
+
+  std::vector<Basis::key_type> result;
+  result.reserve(basis1.set.size() * basis2.set.size());
+  for (const auto& b1 : basis1.set) {
+    for (const auto& b2 : basis2.set) {
+      result.emplace_back(b1);
+      result.back().append_range_reverse(b2, [](const auto& a) { return a.adjoint(); });
+    }
+  }
+  std::sort(result.begin(), result.end(),
+            [](const auto& a, const auto& b) { return a.size() < b.size(); });
+  basis.set = IndexedHashSet(std::move(result));
+  return basis;
+}
+
 }  // namespace libqm

@@ -223,6 +223,32 @@ struct StaticVector {
     size_ += other.size();
   }
 
+  template <size_t OtherMaxCount, typename OtherSizeType>
+  constexpr void append_range_reverse(
+      const StaticVector<T, OtherMaxCount, OtherSizeType>& other) noexcept {
+    LIBQM_ASSERT(remaining_capacity() >= other.size());
+    std::copy_n(other.rbegin(), other.size(), data_ + size_);
+    size_ += other.size();
+  }
+
+  template <size_t OtherMaxCount, typename OtherSizeType, typename Callback>
+  constexpr void append_range(const StaticVector<T, OtherMaxCount, OtherSizeType>& other,
+                              Callback&& callback) noexcept {
+    LIBQM_ASSERT(remaining_capacity() >= other.size());
+    for (const auto& item : other) {
+      push_back(callback(item));
+    }
+  }
+
+  template <size_t OtherMaxCount, typename OtherSizeType, typename Callback>
+  constexpr void append_range_reverse(const StaticVector<T, OtherMaxCount, OtherSizeType>& other,
+                                      Callback&& callback) noexcept {
+    LIBQM_ASSERT(remaining_capacity() >= other.size());
+    for (auto it = other.rbegin(); it != other.rend(); ++it) {
+      push_back(callback(*it));
+    }
+  }
+
   constexpr void swap(StaticVector& other) noexcept {
     if (this != &other) {
       std::swap(size_, other.size_);

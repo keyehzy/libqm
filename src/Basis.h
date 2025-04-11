@@ -26,4 +26,6 @@ struct Basis {
   size_t orbitals;
   size_t particles;
 };
+
+Basis generate_product_basis(const Basis& basis1, const Basis& basis2);
 }  // namespace libqm
