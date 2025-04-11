@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <vector>
+#include <omp.h>
 
 #include "Expression.h"
 #include "NormalOrderer.h"

@@ -47,7 +47,6 @@ add_library(
 
 target_link_libraries(
   qm
-  PRIVATE
   OpenMP::OpenMP_CXX
 )
 

@@ -56,7 +56,8 @@ struct StaticVector {
   constexpr StaticVector() noexcept : size_(0) {}
   ~StaticVector() noexcept = default;
 
-  constexpr StaticVector(size_type count, const T& value) noexcept : size_(count) {
+  constexpr StaticVector(size_t count, const T& value) noexcept
+      : size_(static_cast<size_type>(count)) {
     LIBQM_ASSERT(count <= static_capacity);
     std::fill_n(data_, count, value);
   }
@@ -99,16 +100,16 @@ struct StaticVector {
     return *this;
   }
 
-  constexpr reference at(size_type pos) noexcept {
+  constexpr reference at(size_t pos) noexcept {
     LIBQM_ASSERT(pos < size_);
     return data_[pos];
   }
-  constexpr const_reference at(size_type pos) const noexcept {
+  constexpr const_reference at(size_t pos) const noexcept {
     LIBQM_ASSERT(pos < size_);
     return data_[pos];
   }
-  constexpr reference operator[](size_type pos) noexcept { return data_[pos]; }
-  constexpr const_reference operator[](size_type pos) const noexcept { return data_[pos]; }
+  constexpr reference operator[](size_t pos) noexcept { return data_[pos]; }
+  constexpr const_reference operator[](size_t pos) const noexcept { return data_[pos]; }
   constexpr reference front() noexcept {
     LIBQM_ASSERT(!empty());
     return data_[0];
@@ -151,7 +152,7 @@ struct StaticVector {
   }
 
   [[nodiscard]] constexpr bool empty() const noexcept { return size_ == 0; }
-  [[nodiscard]] constexpr size_type size() const noexcept { return size_; }
+  [[nodiscard]] constexpr size_t size() const noexcept { return size_; }
   [[nodiscard]] constexpr size_t max_size() const noexcept { return static_capacity; }
   [[nodiscard]] constexpr size_t capacity() const noexcept { return static_capacity; }
   [[nodiscard]] constexpr size_t remaining_capacity() const noexcept {
@@ -187,17 +188,17 @@ struct StaticVector {
     --size_;
   }
 
-  constexpr void resize(size_type count) noexcept {
+  constexpr void resize(size_t count) noexcept {
     LIBQM_ASSERT(count <= static_capacity);
-    size_ = count;
+    size_ = static_cast<size_type>(count);
   }
 
-  constexpr void resize(size_type count, const value_type& value) noexcept {
+  constexpr void resize(size_t count, const value_type& value) noexcept {
     LIBQM_ASSERT(count <= static_capacity);
     if (count > size_) {
       std::fill_n(data_ + size_, count - size_, value);
     }
-    size_ = count;
+    size_ = static_cast<size_type>(count);
   }
 
   template <std::input_iterator InputIt, std::sentinel_for<InputIt> Sentinel>

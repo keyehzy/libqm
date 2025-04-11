@@ -31,7 +31,7 @@ struct Operator {
 
   constexpr Operator() noexcept = default;
 
-  constexpr explicit Operator(Type type, Spin spin, ubyte value) noexcept
+  constexpr explicit Operator(Type type, Spin spin, size_t value) noexcept
       : data(static_cast<ubyte>(value << kFermionBitsShift) | (static_cast<ubyte>(spin) << 1) |
              (static_cast<ubyte>(type) << 0)) {
     LIBQM_ASSERT(value < max_index());

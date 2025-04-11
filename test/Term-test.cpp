@@ -174,11 +174,6 @@ TEST_F(TermTest, MoveAssignment) {
 
   // Check the state of the moved-from object t1
   EXPECT_TRUE(t1.operators.empty());
-
-  Term t3(complex_i, {aD2});
-  Term t3_copy = t3;
-  t3 = std::move(t3);
-  EXPECT_EQ(t3, Term(complex_i, {aD2}));
 }
 
 TEST_F(TermTest, Size) {

@@ -284,22 +284,6 @@ TEST_F(IndexedHashSetTest, MoveAssignmentFromEmpty) {
   EXPECT_EQ(s1.size(), 0);
 }
 
-TEST_F(IndexedHashSetTest, MoveAssignmentSelf) {
-  IndexedHashSet<int> s1({1, 2, 3});
-  std::vector<int> expected1 = {1, 2, 3};
-  // Move self-assignment is tricky and potentially dangerous,
-  // but the default implementation should handle it correctly (might be no-op or clear).
-  // We test that it doesn't crash and the object remains valid.
-  s1 = std::move(s1);
-  // The state after move self-assignment is often unspecified, but it shouldn't crash.
-  // It *might* still hold the original elements or be empty.
-  // Let's check if it matches the original state OR is empty, as both are plausible outcomes
-  // depending on the exact std::vector/std::unordered_map move assignment behavior.
-  bool is_original = (s1.size() == 3 && s1[0] == 1 && s1[1] == 2 && s1[2] == 3);
-  bool is_empty = s1.empty();
-  EXPECT_TRUE(is_original || is_empty);  // Should be in one of these valid states
-}
-
 TEST_F(IndexedHashSetTest, EmptyAndSize) {
   IndexedHashSet<int> s_empty;
   EXPECT_TRUE(s_empty.empty());

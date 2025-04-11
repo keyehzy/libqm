@@ -461,6 +461,7 @@ TEST_F(StaticVectorTest, EmplaceBack) {
   EXPECT_EQ(&p2_ref, &vec.back());
 
   auto& p3_ref = vec.emplace_back(3, 30);
+  (void)p3_ref;
   auto& p4_ref = vec.emplace_back(4, 40);
   EXPECT_THAT(vec, ElementsAre(Pair{1, 10}, Pair{2, 20}, Pair{3, 30}, Pair{4, 40}));
   EXPECT_EQ(vec.size(), 4);

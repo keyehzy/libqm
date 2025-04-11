@@ -47,7 +47,7 @@ Expression NormalOrderer::normal_order_recursive(container_type ops, size_t hash
   }
   cache_misses++;
 
-  int phase = 1;
+  float phase = 1.0f;
 
   for (size_t i = 1; i < ops.size(); ++i) {
     size_t j = i;
@@ -57,7 +57,8 @@ Expression NormalOrderer::normal_order_recursive(container_type ops, size_t hash
         phase = -phase;
         --j;
       } else {
-        Expression result = phase * handle_non_commuting(std::move(ops), j - 1);
+        Expression result =
+            static_cast<complex_type>(phase) * handle_non_commuting(std::move(ops), j - 1);
         cache.emplace(hash, result);
         return result;
       }
@@ -89,7 +90,8 @@ void NormalOrderer::print_cache_stats() const {
   std::cout << "Total entries: " << cache.size() << std::endl;
   std::cout << "Cache hits: " << cache_hits << std::endl;
   std::cout << "Cache misses: " << cache_misses << std::endl;
-  double hit_ratio = static_cast<double>(cache_hits) / (cache_hits + cache_misses);
+  double hit_ratio =
+      static_cast<double>(cache_hits) / static_cast<double>(cache_hits + cache_misses);
   std::cout << "Hit ratio: " << hit_ratio << std::endl;
 }
 }  // namespace libqm
