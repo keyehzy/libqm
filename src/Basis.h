@@ -13,11 +13,13 @@ struct Basis {
     Restrict,
   };
 
+  Basis() = default;
+
   Basis(size_t orbitals, size_t particles, Strategy strategy = Strategy::Restrict);
 
-  void generate_all_combinations(key_type& current, size_t first_orbital,
+  void generate_all_combinations(key_type current, size_t first_orbital,
                                  std::vector<key_type>&) const;
-  void generate_restrict_combinations(key_type& current, size_t first_orbital,
+  void generate_restrict_combinations(key_type current, size_t first_orbital,
                                       std::vector<key_type>&) const;
 
   set_type set;
