@@ -240,6 +240,11 @@ Expression operator-(const Term& a, const Term& b) {
   return result;
 }
 
+Expression hopping(size_t f, size_t t, Operator::Spin s) {
+  LIBQM_ASSERT(f != t);
+  return one_body(s, t, s, f) + one_body(s, f, s, t);
+}
+
 Expression hopping(Expression::complex_type c, size_t f, size_t t, Operator::Spin s) {
   LIBQM_ASSERT(f != t);
   return c * one_body(s, t, s, f) + std::conj(c) * one_body(s, f, s, t);
