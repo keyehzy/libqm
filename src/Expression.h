@@ -74,6 +74,7 @@ Expression operator*(const Term& a, const Expression& b);
 Expression operator+(const Term& a, const Term& b);
 Expression operator-(const Term& a, const Term& b);
 
+Expression hopping(size_t from_orbital, size_t to_orbital, Operator::Spin spin);
 Expression hopping(Expression::complex_type c, size_t from_orbital, size_t to_orbital,
                    Operator::Spin spin);
 
