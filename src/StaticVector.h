@@ -14,6 +14,8 @@
 
 #include "Assert.h"
 
+#include "xxhash.h"
+
 template <typename T>
 concept Trivial = std::is_trivially_copyable_v<T> && std::is_trivially_destructible_v<T>;
 
@@ -23,14 +25,6 @@ concept UnsignedIntegralSizeType = std::unsigned_integral<S>;
 template <size_t MaxCount, typename SizeType>
 concept ValidStaticVectorCapacity = MaxCount > 0 &&
                                     MaxCount <= std::numeric_limits<SizeType>::max();
-
-namespace detail {
-inline constexpr void hash_combine(std::size_t& seed, std::size_t value) noexcept {
-  constexpr std::size_t prime = 0x00000100000001b3ULL;
-  seed ^= value;
-  seed *= prime;
-}
-}  // namespace detail
 
 /**
  * @brief A C++20 fixed-capacity container optimized for TRIVIALLY COPYABLE types. Similar to
@@ -293,11 +287,7 @@ template <Trivial T, size_t MaxCount, UnsignedIntegralSizeType SizeType>
 struct std::hash<StaticVector<T, MaxCount, SizeType>> {
   [[nodiscard]] constexpr std::size_t operator()(
       const StaticVector<T, MaxCount, SizeType>& container) const noexcept {
-    std::size_t seed = 0xcbf29ce484222325ULL;
-    for (auto it = container.begin(); it != container.end(); ++it) {
-      detail::hash_combine(seed, std::hash<T>{}(*it));
-    }
-    return seed;
+    return XXH3_64bits(container.begin(), container.size());
   }
 };
 

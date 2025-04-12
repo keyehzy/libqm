@@ -46,6 +46,9 @@ add_library(
 
   src/Commutator.h
   src/Commutator.cpp
+
+  src/xxhash.h
+  src/xxhash.c
 )
 
 target_link_libraries(
