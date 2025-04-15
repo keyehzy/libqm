@@ -9,10 +9,11 @@ std::string Term::to_string() const {
     return std::string();
   }
 
-  std::string result = std::format("({:.5f},{:.5f})", c.real(), c.imag());
+  std::string result;
   for (const auto& op : operators) {
     result += op.to_string();
   }
+  result += std::format(" ({:.5f},{:.5f})", c.real(), c.imag());
 
   return result;
 }
