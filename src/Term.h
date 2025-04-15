@@ -114,15 +114,15 @@ constexpr Term operator*(Operator a, const Term& b) noexcept {
   return result;
 }
 
-constexpr bool is_diagonal(const Term& term) noexcept {
-  if (term.operators.empty()) {
+constexpr bool is_diagonal(const Term::container_type& operators) noexcept {
+  if (operators.empty()) {
     return true;
   }
 
   std::array<std::pair<uint64_t, int>, Operator::max_unique_keys()> counts;
   size_t counts_size = 0;
 
-  for (const auto& op : term.operators) {
+  for (const auto& op : operators) {
     int increment = (op.type() == Operator::Type::Creation) ? 1 : -1;
 
     bool found = false;
@@ -148,6 +148,7 @@ constexpr bool is_diagonal(const Term& term) noexcept {
 
   return true;
 }
+
 
 constexpr Term creation(Operator::Spin spin, size_t orbital) noexcept {
   return Term({Operator::creation(spin, orbital)});
