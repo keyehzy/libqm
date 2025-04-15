@@ -1,6 +1,7 @@
 #include "NormalOrderer.h"
 
 #include <limits>
+#include <thread>
 
 #include "Expression.h"
 
@@ -21,10 +22,36 @@ Expression NormalOrderer::normal_order(const Term& term) {
 }
 
 Expression NormalOrderer::normal_order(const Expression& expr) {
-  Expression result;
-  for (const auto& [ops, c] : expr.hashmap) {
-    result += normal_order(c, ops);
+  size_t num_tasks = expr.hashmap.size();
+
+  if (num_tasks == 0) {
+    return Expression();
   }
+
+  std::vector<Expression> results(num_tasks);
+  std::vector<std::thread> threads;
+  threads.reserve(num_tasks);
+
+  size_t current_task_index = 0;
+  for (const auto& [ops_key, c_value] : expr.hashmap) {
+    Expression& result_slot = results[current_task_index];
+    threads.emplace_back([this, ops = ops_key, c = c_value, &result_slot]() {
+      result_slot = this->normal_order(c, ops);
+    });
+    current_task_index++;
+  }
+
+  for (std::thread& t : threads) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+
+  Expression result;
+  for (const auto& individual_result : results) {
+    result += individual_result;
+  }
+
   return result;
 }
 
@@ -41,13 +68,20 @@ Expression NormalOrderer::normal_order_recursive(const container_type& ops) {
 }
 
 Expression NormalOrderer::normal_order_recursive(container_type ops, size_t hash) {
-  if (cache.contains(hash)) {
-    cache_hits++;
-    return cache[hash];
+  {
+    std::shared_lock reader_lock(cache_mutex);
+    auto it = cache.find(hash);
+    if (it != cache.end()) {
+      cache_hits++;
+      return it->second;
+    }
+    cache_misses++;
   }
-  cache_misses++;
 
+  Expression result;
   float phase = 1.0f;
+  bool early_exit = false;
+  size_t non_commuting_index = 0;
 
   for (size_t i = 1; i < ops.size(); ++i) {
     size_t j = i;
@@ -57,21 +91,26 @@ Expression NormalOrderer::normal_order_recursive(container_type ops, size_t hash
         phase = -phase;
         --j;
       } else {
-        Expression result =
-            static_cast<complex_type>(phase) * handle_non_commuting(std::move(ops), j - 1);
-        cache.emplace(hash, result);
-        return result;
+        early_exit = true;
+        non_commuting_index = j - 1;
+        goto handle_computation;
       }
     }
   }
 
-  Expression result;
-  if (has_consecutive_elements(ops)) {
-    result = Expression();
+handle_computation:
+  if (early_exit) {
+    result = static_cast<complex_type>(phase) *
+             handle_non_commuting(std::move(ops), non_commuting_index);
   } else {
-    result = Expression(phase, std::move(ops));
+    if (has_consecutive_elements(ops)) {
+      result = Expression();
+    } else {
+      result = Expression(phase, std::move(ops));
+    }
   }
 
+  std::unique_lock writer_lock(cache_mutex);
   cache.emplace(hash, result);
   return result;
 }
@@ -87,6 +126,7 @@ Expression NormalOrderer::handle_non_commuting(container_type ops, size_t index)
 }
 
 void NormalOrderer::print_cache_stats() const {
+  std::shared_lock reader_lock(cache_mutex);
   std::cout << "Total entries: " << cache.size() << std::endl;
   std::cout << "Cache hits: " << cache_hits << std::endl;
   std::cout << "Cache misses: " << cache_misses << std::endl;
