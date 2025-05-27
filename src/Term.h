@@ -8,7 +8,7 @@
 namespace libqm {
 constexpr size_t cache_line_size = 64;  // NOTE: might be different
 
-struct __attribute__((aligned(cache_line_size))) Term {
+struct Term {
   using complex_type = std::complex<float>;
 
   static constexpr size_t static_vector_size =
@@ -76,7 +76,7 @@ struct __attribute__((aligned(cache_line_size))) Term {
     return *this;
   }
 };
-static_assert(sizeof(Term) == 64, "Should fit a single cache line");
+static_assert(sizeof(Term) == cache_line_size, "Should fit a single cache line");
 
 constexpr Term operator*(const Term& a, const Term& b) noexcept {
   Term result(a);
@@ -114,40 +114,7 @@ constexpr Term operator*(Operator a, const Term& b) noexcept {
   return result;
 }
 
-constexpr bool is_diagonal(const Term::container_type& operators) noexcept {
-  if (operators.empty()) {
-    return true;
-  }
-
-  std::array<std::pair<uint64_t, int>, Operator::max_unique_keys()> counts;
-  size_t counts_size = 0;
-
-  for (const auto& op : operators) {
-    int increment = (op.type() == Operator::Type::Creation) ? 1 : -1;
-
-    bool found = false;
-    for (size_t i = 0; i < counts_size; ++i) {
-      if (counts[i].first == op.key()) {
-        counts[i].second += increment;
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      counts[counts_size] = {op.key(), increment};
-      counts_size++;
-    }
-  }
-
-  for (size_t i = 0; i < counts_size; ++i) {
-    if (counts[i].second != 0) {
-      return false;
-    }
-  }
-
-  return true;
-}
+bool is_diagonal(const Term::container_type& operators);
 
 
 constexpr Term creation(Operator::Spin spin, size_t orbital) noexcept {

@@ -14,6 +14,7 @@
 
 #include "Assert.h"
 
+#define XXH_INLINE_ALL
 #include "xxhash.h"
 
 template <typename T>
@@ -60,6 +61,12 @@ struct StaticVector {
       : size_(static_cast<size_type>(init.size())) {
     LIBQM_ASSERT(init.size() <= static_capacity);
     std::copy(init.begin(), init.end(), data_);
+  }
+
+  template <std::input_iterator InputIt, std::sentinel_for<InputIt> Sentinel>
+  constexpr StaticVector(InputIt first, Sentinel last) noexcept : size_(std::distance(first, last)) {
+    LIBQM_ASSERT(std::distance(first, last) <= static_capacity);
+    std::copy(first, last, data_);
   }
 
   constexpr StaticVector(const StaticVector& other) noexcept : size_(other.size_) {
@@ -261,6 +268,11 @@ struct StaticVector {
                                                   std::compare_three_way{});
   }
 
+  [[nodiscard]] constexpr auto operator<(const StaticVector& other) const noexcept
+  {
+    return std::lexicographical_compare(begin(), end(), other.begin(), other.end());
+  }
+
   [[nodiscard]] constexpr bool operator==(const StaticVector& other) const noexcept
     requires std::equality_comparable<T>
   {
@@ -293,6 +305,13 @@ struct std::hash<StaticVector<T, MaxCount, SizeType>> {
 
 template <Trivial T, size_t MaxCount, UnsignedIntegralSizeType SizeType>
   requires ValidStaticVectorCapacity<MaxCount, SizeType>
+  [[nodiscard]] constexpr std::size_t hash_value(
+      const StaticVector<T, MaxCount, SizeType>& container) noexcept {
+    return XXH3_64bits(container.begin(), container.size());
+}
+
+template <Trivial T, size_t MaxCount, UnsignedIntegralSizeType SizeType>
+  requires ValidStaticVectorCapacity<MaxCount, SizeType>
 constexpr bool has_consecutive_elements(const StaticVector<T, MaxCount, SizeType>& container) {
   return std::adjacent_find(container.begin(), container.end()) != container.end();
 }
@@ -304,6 +323,6 @@ constexpr StaticVector<T, MaxCount, SizeType> merge(
     const StaticVector<T, MaxCount, SizeType>& container2) {
   LIBQM_ASSERT(container1.remaining_capacity() >= container2.size());
   StaticVector<T, MaxCount, SizeType> result(container1);
-  result.append_range(container2.begin(), container2.end());
+  result.append_range(container2);
   return result;
 }

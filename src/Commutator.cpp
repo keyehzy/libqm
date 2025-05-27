@@ -1,4 +1,5 @@
 #include "Commutator.h"
+#include "Logger.h"
 
 namespace libqm {
 Expression commutator(const Term& A, const Term& B, NormalOrderer& orderer) {
@@ -17,26 +18,19 @@ Expression anticommutator(const Expression& A, const Expression& B, NormalOrdere
   return orderer.normal_order(A * B) + orderer.normal_order(B * A);
 }
 
-Expression BCH(const Expression& A, const Expression& B, float lambda, NormalOrderer& orderer, size_t order) {
-  std::vector<Expression> terms(order + 1);
+  Expression BCH(const Expression& A, const Expression& B, float lambda, NormalOrderer& orderer, size_t order)
+  {
+    Expression current = B;
+    float coeff = 1.0f;
+    Expression result = current * coeff;
 
-  terms[0] = B;
-  terms[1] = commutator(A, B, orderer);
+    for (size_t n = 1; n <= order; ++n) {
+      current = commutator(A, current, orderer);
+      coeff *= (lambda / static_cast<float>(n));
+      result += current * coeff;
+    }
 
-  for (size_t n = 2; n <= order; ++n) {
-    terms[n] = commutator(A, terms[n - 1], orderer);
+    return orderer.normal_order(result);
   }
-
-  Expression result;
-  uint64_t factorial = 1;
-
-  for (size_t n = 0; n <= order; ++n) {
-    float coeff = std::powf(lambda, n) / factorial;
-    result += terms[n] * coeff;
-    factorial *= n + 1;
-  }
-
-  return orderer.normal_order(result);
-}
 
 }  // namespace libqm

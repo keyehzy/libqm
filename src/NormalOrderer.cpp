@@ -10,72 +10,30 @@ constexpr float tolerance = std::numeric_limits<float>::epsilon();
 
 Expression NormalOrderer::normal_order(const complex_type& c, const container_type& ops) {
   if (std::norm(c) < tolerance * tolerance) {
-    return Expression();
+    return {};
   }
-  auto result = c * normal_order_recursive(ops);
-  return result;
+  return c * normal_order_recursive(ops);
 }
 
 Expression NormalOrderer::normal_order(const Term& term) {
-  Expression result = normal_order(term.c, term.operators);
-  return result;
+  return normal_order(term.c, term.operators);
 }
 
 Expression NormalOrderer::normal_order(const Expression& expr) {
-  size_t num_tasks = expr.hashmap.size();
-
-  if (num_tasks == 0) {
-    return Expression();
-  }
-
-  std::vector<Expression> results(num_tasks);
-  std::vector<std::thread> threads;
-  threads.reserve(num_tasks);
-
-  size_t current_task_index = 0;
-  for (const auto& [ops_key, c_value] : expr.hashmap) {
-    Expression& result_slot = results[current_task_index];
-    threads.emplace_back([this, ops = ops_key, c = c_value, &result_slot]() {
-      result_slot = this->normal_order(c, ops);
-    });
-    current_task_index++;
-  }
-
-  for (std::thread& t : threads) {
-    if (t.joinable()) {
-      t.join();
-    }
-  }
-
   Expression result;
-  for (const auto& individual_result : results) {
-    result += individual_result;
+  for (const auto& [ops, c] : expr.hashmap) {
+    result += normal_order(c, ops);
   }
-
   return result;
 }
 
-Expression NormalOrderer::normal_order_recursive(const container_type& ops) {
+Expression NormalOrderer::normal_order_recursive(container_type ops) {
   if (ops.size() < 2) {
     return Expression(ops);
   }
 
   if (has_consecutive_elements(ops)) {
-    return Expression();
-  }
-
-  return normal_order_recursive(ops, std::hash<container_type>()(ops));
-}
-
-Expression NormalOrderer::normal_order_recursive(container_type ops, size_t hash) {
-  {
-    std::shared_lock reader_lock(cache_mutex);
-    auto it = cache.find(hash);
-    if (it != cache.end()) {
-      cache_hits++;
-      return it->second;
-    }
-    cache_misses++;
+    return {};
   }
 
   Expression result;
@@ -91,28 +49,16 @@ Expression NormalOrderer::normal_order_recursive(container_type ops, size_t hash
         phase = -phase;
         --j;
       } else {
-        early_exit = true;
-        non_commuting_index = j - 1;
-        goto handle_computation;
+        return phase * handle_non_commuting(std::move(ops), j-1);
       }
     }
   }
 
-handle_computation:
-  if (early_exit) {
-    result = static_cast<complex_type>(phase) *
-             handle_non_commuting(std::move(ops), non_commuting_index);
-  } else {
-    if (has_consecutive_elements(ops)) {
-      result = Expression();
-    } else {
-      result = Expression(phase, std::move(ops));
-    }
+  if (has_consecutive_elements(ops)) {
+    return {};
   }
 
-  std::unique_lock writer_lock(cache_mutex);
-  cache.emplace(hash, result);
-  return result;
+  return Expression(phase, std::move(ops));
 }
 
 Expression NormalOrderer::handle_non_commuting(container_type ops, size_t index) {
@@ -120,13 +66,10 @@ Expression NormalOrderer::handle_non_commuting(container_type ops, size_t index)
   contracted.append_range(ops.begin(), ops.begin() + index);
   contracted.append_range(ops.begin() + index + 2, ops.end());
   std::swap(ops[index], ops[index + 1]);
-  Expression lhs = normal_order_recursive(std::move(contracted));
-  Expression rhs = normal_order_recursive(std::move(ops));
-  return lhs - rhs;
+  return normal_order_recursive(std::move(contracted)) - normal_order_recursive(std::move(ops));
 }
 
 void NormalOrderer::print_cache_stats() const {
-  std::shared_lock reader_lock(cache_mutex);
   std::cout << "Total entries: " << cache.size() << std::endl;
   std::cout << "Cache hits: " << cache_hits << std::endl;
   std::cout << "Cache misses: " << cache_misses << std::endl;

@@ -4,6 +4,7 @@
 #include <vector>
 #include <omp.h>
 
+#include "Logger.h"
 #include "Expression.h"
 #include "NormalOrderer.h"
 
@@ -16,7 +17,7 @@ template <typename VectorType, typename Basis>
 VectorType compute_vector_elements_serial(const Basis& basis, const Expression& A,
                                           NormalOrderer& orderer) {
   const auto& set = basis.set;
-  VectorType result = VectorType::Zero(set.size());
+  VectorType result(set.size());// = VectorType::Zero(set.size());
   for (size_t i = 0; i < set.size(); ++i) {
     Expression left(set[i]);
     Expression product = orderer.normal_order(left.adjoint() * A);
@@ -28,7 +29,7 @@ VectorType compute_vector_elements_serial(const Basis& basis, const Expression& 
 template <typename VectorType, typename Basis>
 VectorType compute_vector_elements(const Basis& basis, const Expression& A) {
   const auto& set = basis.set;
-  VectorType result = VectorType::Zero(set.size());
+  VectorType result(set.size());// = VectorType::Zero(set.size());
 #pragma omp parallel
   {
     NormalOrderer orderer;
@@ -46,7 +47,7 @@ template <typename MatrixType, typename Basis>
 MatrixType compute_matrix_elements_serial(const Basis& basis, const Expression& A,
                                           NormalOrderer& orderer) {
   const auto& set = basis.set;
-  MatrixType result = MatrixType::Zero(set.size(), set.size());
+  MatrixType result(set.size(), set.size());// = MatrixType::Zero(set.size(), set.size());
   for (size_t j = 0; j < set.size(); ++j) {
     Expression right(set[j]);
     Expression product = orderer.normal_order(A * right);
@@ -63,12 +64,15 @@ MatrixType compute_matrix_elements_serial(const Basis& basis, const Expression& 
 template <typename MatrixType, typename Basis>
 MatrixType compute_matrix_elements(const Basis& basis, const Expression& A) {
   const auto& set = basis.set;
-  MatrixType result = MatrixType::Zero(set.size(), set.size());
+  MatrixType result(set.size(), set.size());// = MatrixType::Zero(set.size(), set.size());
 #pragma omp parallel
   {
     NormalOrderer orderer;
 #pragma omp for schedule(dynamic)
     for (size_t j = 0; j < set.size(); ++j) {
+      if (j % 1000 == 0) {
+        Logger::the().info_fmt("Basis index {}/{} ({:.4f}%)", j, set.size(), 100.f * j / set.size());
+      }
       Expression right(set[j]);
       Expression product = orderer.normal_order(A * right);
       std::vector<std::pair<size_t, Expression::complex_type>> coefficients;

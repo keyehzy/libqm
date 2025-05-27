@@ -399,13 +399,13 @@ TEST(TermHelperTest, IsDiagonal) {
   Term ops_non_diag2({cU0, aD1});
   Term ops_non_diag3({cU0, cU0, aU0});
 
-  EXPECT_TRUE(is_diagonal(ops_empty));
-  EXPECT_TRUE(is_diagonal(ops_diag1));
-  EXPECT_TRUE(is_diagonal(ops_diag2));
-  EXPECT_TRUE(is_diagonal(ops_diag3));
-  EXPECT_FALSE(is_diagonal(ops_non_diag1));
-  EXPECT_FALSE(is_diagonal(ops_non_diag2));
-  EXPECT_FALSE(is_diagonal(ops_non_diag3));
+  EXPECT_TRUE(is_diagonal(ops_empty.operators));
+  EXPECT_TRUE(is_diagonal(ops_diag1.operators));
+  EXPECT_TRUE(is_diagonal(ops_diag2.operators));
+  EXPECT_TRUE(is_diagonal(ops_diag3.operators));
+  EXPECT_FALSE(is_diagonal(ops_non_diag1.operators));
+  EXPECT_FALSE(is_diagonal(ops_non_diag2.operators));
+  EXPECT_FALSE(is_diagonal(ops_non_diag3.operators));
 }
 
 TEST(TermFactoryTest, Creation) {

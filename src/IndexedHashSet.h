@@ -9,7 +9,8 @@
 #include <iterator>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_map>
+#include <boost/unordered/unordered_flat_map.hpp>
+#include <boost/unordered/unordered_flat_set.hpp>
 #include <utility>
 #include <vector>
 
@@ -37,7 +38,7 @@ class IndexedHashSet {
 
  private:
   std::vector<Key> elements_;
-  std::unordered_map<Key, size_type, Hash, KeyEqual> indices_;
+  boost::unordered_flat_map<Key, size_type, Hash, KeyEqual> indices_;
 
   void build_index_map() {
     indices_.reserve(elements_.size());
@@ -49,7 +50,7 @@ class IndexedHashSet {
   template <typename InputIt>
   void initialize_members_from_range(InputIt first, InputIt last) {
 #ifndef NDEBUG
-    std::unordered_set<Key, Hash, KeyEqual> seen_keys;
+    boost::unordered_flat_set<Key, Hash, KeyEqual> seen_keys;
 #endif
     std::vector<Key> unique_elements;
 
@@ -81,7 +82,7 @@ class IndexedHashSet {
 
   void initialize_members_from_moved_vector(std::vector<Key>&& source_vector) {
 #ifndef NDEBUG
-    std::unordered_set<Key, Hash, KeyEqual> seen_keys;
+    boost::unordered_flat_set<Key, Hash, KeyEqual> seen_keys;
 #endif
     std::vector<Key> unique_elements;
 
@@ -161,6 +162,10 @@ class IndexedHashSet {
       throw std::out_of_range("Index out of range.");
     }
     return map_iterator->second;
+  }
+
+  const std::vector<Key>& elements() const {
+    return elements_;
   }
 
   const_iterator begin() const noexcept { return elements_.cbegin(); }

@@ -7,10 +7,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(OpenMP REQUIRED)
 find_package(GTest REQUIRED)
+# find_package(Armadillo REQUIRED)
 
 add_executable(
   main
-  src/main.cpp
+  src/diag.cpp
 )
 
 target_link_libraries(
@@ -49,11 +50,24 @@ add_library(
 
   src/xxhash.h
   src/xxhash.c
+
+  src/Logger.h
+  src/Logger.cpp
+)
+
+target_include_directories(
+  qm
+  PUBLIC
+  OpenMP::OpenMP_CXX
+  # ${ARMADILLO_INCLUDE_DIRS}
 )
 
 target_link_libraries(
   qm
+  PUBLIC
   OpenMP::OpenMP_CXX
+  # ${ARMADILLO_LIBRARIES}
+  # -DARMA_DONT_USE_WRAPPER
 )
 
 add_executable(

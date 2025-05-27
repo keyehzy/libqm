@@ -15,14 +15,6 @@ Expression::Expression(const container_type& container) { hashmap.emplace(contai
 
 Expression::Expression(container_type&& container) { hashmap.emplace(std::move(container), 1.0f); }
 
-Expression::Expression(complex_type c, const container_type& container) {
-  hashmap.emplace(container, c);
-}
-
-Expression::Expression(complex_type c, container_type&& container) {
-  hashmap.emplace(std::move(container), c);
-}
-
 Expression::Expression(std::initializer_list<Term> lst) {
   hashmap.reserve(lst.size());
   for (const auto& term : lst) {
@@ -34,20 +26,18 @@ Expression Expression::adjoint() const {
   Expression result;
   result.hashmap.reserve(hashmap.size());
   for (const auto& [ops, c] : hashmap) {
-    container_type adjoint_ops;
-    for (auto it = ops.rbegin(); it != ops.rend(); ++it) {
-      adjoint_ops.push_back(it->adjoint());
-    }
-    result.hashmap.emplace(std::move(adjoint_ops), std::conj(c));
+    container_type adjoint_ops(ops.rbegin(), ops.rend());
+    std::transform(adjoint_ops.begin(), adjoint_ops.end(), adjoint_ops.begin(), [](auto& o){ return o.adjoint(); });
+    result.hashmap[std::move(adjoint_ops)] += std::conj(c);
   }
   return result;
 }
 
 std::string Expression::to_string() const {
   if (hashmap.empty()) {
-    return std::string();
+    return {};
   }
-  
+
   std::string result;
 
   for (const auto& [ops, c] : hashmap) {
@@ -60,24 +50,24 @@ std::string Expression::to_string() const {
   return result;
 }
 
-Expression& Expression::operator+=(complex_type other) {
+Expression& Expression::operator+=(const complex_type& other) {
   hashmap[{}] += other;
   return *this;
 }
 
-Expression& Expression::operator-=(complex_type other) {
+Expression& Expression::operator-=(const complex_type& other) {
   hashmap[{}] -= other;
   return *this;
 }
 
-Expression& Expression::operator*=(complex_type other) {
+Expression& Expression::operator*=(const complex_type& other) {
   for (auto& [ops, c] : hashmap) {
     c *= other;
   }
   return *this;
 }
 
-Expression& Expression::operator/=(complex_type other) {
+Expression& Expression::operator/=(const complex_type& other) {
   for (auto& [ops, c] : hashmap) {
     c /= other;
   }
@@ -104,7 +94,7 @@ Expression& Expression::operator*=(const Expression& other) {
   for (const auto& [ops1, c1] : hashmap) {
     for (const auto& [ops2, c2] : other.hashmap) {
       auto combined_ops = merge(ops1, ops2);
-      result[combined_ops] += c1 * c2;
+      result[std::move(combined_ops)] += c1 * c2;
     }
   }
   hashmap = std::move(result);
@@ -126,106 +116,92 @@ Expression& Expression::operator*=(const Term& other) {
   result.reserve(hashmap.size());
   for (const auto& [ops1, c1] : hashmap) {
     auto combined_ops = merge(ops1, other.operators);
-    result[combined_ops] += c1 * other.c;
+    result[std::move(combined_ops)] += c1 * other.c;
   }
   hashmap = std::move(result);
   return *this;
 }
 
-Expression operator+(const Expression& a, const Expression& b) {
-  Expression result(a);
-  result += b;
-  return result;
+Expression operator+(Expression a, const Expression& b) {
+  a += b;
+  return a;
 }
 
-Expression operator-(const Expression& a, const Expression& b) {
-  Expression result(a);
-  result -= b;
-  return result;
+Expression operator-(Expression a, const Expression& b) {
+  a -= b;
+  return a;
 }
 
-Expression operator*(const Expression& a, const Expression& b) {
-  Expression result(a);
-  result *= b;
-  return result;
+Expression operator*(Expression a, const Expression& b) {
+  a *= b;
+  return a;
 }
 
-Expression operator+(const Expression& a, const Term& b) {
-  Expression result(a);
-  result += b;
-  return result;
+Expression operator+(Expression a, const Term& b) {
+  a += b;
+  return a;
 }
 
-Expression operator-(const Expression& a, const Term& b) {
-  Expression result(a);
-  result -= b;
-  return result;
+Expression operator-(Expression a, const Term& b) {
+  a -= b;
+  return a;
 }
 
-Expression operator*(const Expression& a, const Term& b) {
-  Expression result(a);
-  result *= b;
-  return result;
+Expression operator*(Expression a, const Term& b) {
+  a *= b;
+  return a;
 }
 
-Expression operator+(const Expression& a, Expression::complex_type b) {
-  Expression result(a);
-  result += b;
-  return result;
+Expression operator+(Expression a, const Expression::complex_type& b) {
+  a += b;
+  return a;
 }
 
-Expression operator-(const Expression& a, Expression::complex_type b) {
-  Expression result(a);
-  result -= b;
-  return result;
+Expression operator-(Expression a, const Expression::complex_type& b) {
+  a -= b;
+  return a;
 }
 
-Expression operator*(const Expression& a, Expression::complex_type b) {
-  Expression result(a);
-  result *= b;
-  return result;
+Expression operator*(Expression a, const Expression::complex_type& b) {
+  a *= b;
+  return a;
 }
 
-Expression operator/(const Expression& a, Expression::complex_type b) {
-  Expression result(a);
-  result /= b;
-  return result;
+Expression operator/(Expression a, const Expression::complex_type& b) {
+  a /= b;
+  return a;
 }
 
-Expression operator+(Expression::complex_type a, const Expression& b) {
-  Expression result(b);
-  result += a;
-  return result;
+Expression operator+(const Expression::complex_type& a, Expression b) {
+  b += a;
+  return b;
 }
 
-Expression operator-(Expression::complex_type a, const Expression& b) {
-  Expression result(a);
-  result -= b;
-  return result;
+Expression operator-(const Expression::complex_type& a, Expression b) {
+  b *= -1;
+  b += a;
+  return b;
 }
 
-Expression operator*(Expression::complex_type a, const Expression& b) {
-  Expression result(b);
-  result *= a;
-  return result;
+Expression operator*(const Expression::complex_type& a, Expression b) {
+  b *= a;
+  return b;
 }
 
-Expression operator+(const Term& a, const Expression& b) {
-  Expression result(a);
-  result += b;
-  return result;
+Expression operator+(const Term& a, Expression b) {
+  b += a;
+  return b;
 }
 
-Expression operator-(const Term& a, const Expression& b) {
-  Expression result(a);
-  result -= b;
-  return result;
+Expression operator-(const Term& a, Expression b) {
+  b *= -1;
+  b += a;
+  return b;
 }
 
-Expression operator*(const Term& a, const Expression& b) {
-  Expression result(a);
-  result *= b;
-  return result;
+Expression operator*(const Term& a, Expression b) {
+  b *= a;
+  return b;
 }
 
 Expression operator+(const Term& a, const Term& b) {
@@ -245,7 +221,7 @@ Expression hopping(size_t f, size_t t, Operator::Spin s) {
   return one_body(s, t, s, f) + one_body(s, f, s, t);
 }
 
-Expression hopping(Expression::complex_type c, size_t f, size_t t, Operator::Spin s) {
+Expression hopping(const Expression::complex_type& c, size_t f, size_t t, Operator::Spin s) {
   LIBQM_ASSERT(f != t);
   return c * one_body(s, t, s, f) + std::conj(c) * one_body(s, f, s, t);
 }
